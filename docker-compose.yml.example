@@ -1,0 +1,67 @@
+networks:
+  net1:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 10.10.0.0/24
+          gateway: 10.10.0.1
+
+services:
+  nginx:
+    # image: docker.io/nginx:1.27.0-alpine3.19-slim
+    build:
+      context: .
+      dockerfile: ./nginx.Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${UID:-1000}
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./nginx:/etc/nginx:ro
+      - ./www:/var/www
+      - ./log/nginx:/var/log/nginx
+    networks:
+      net1:
+        ipv4_address: 10.10.0.11
+
+  php:
+    build:
+      context: .
+      dockerfile: ./php.Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${UID:-1000}
+    container_name: php
+    restart: unless-stopped
+    user: '${UID:-1000}:${GID:-1000}'
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ./www:/var/www
+      - ./log/php:/var/log
+    expose:
+      - "9000"
+    working_dir: /var/www
+    networks:
+      net1:
+        ipv4_address: 10.10.0.21
+
+  mariadb:
+    image: mariadb:11.1.2
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      net1:
+        ipv4_address: 10.10.0.31
