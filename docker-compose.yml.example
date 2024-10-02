@@ -14,12 +14,12 @@ services:
       context: .
       dockerfile: ./nginx.Dockerfile
       args:
-        UID: ${UID:-1000}
-        GID: ${UID:-1000}
+        U_ID: ${U_ID:-1000}
+        G_ID: ${G_ID:-1000}
     container_name: nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8080:8080"
       - "443:443"
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -35,11 +35,11 @@ services:
       context: .
       dockerfile: ./php.Dockerfile
       args:
-        UID: ${UID:-1000}
-        GID: ${UID:-1000}
+        U_ID: ${U_ID:-1000}
+        G_ID: ${G_ID:-1000}
     container_name: php
     restart: unless-stopped
-    user: '${UID:-1000}:${GID:-1000}'
+    user: '${U_ID:-1000}:${G_ID:-1000}'
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
@@ -51,17 +51,3 @@ services:
     networks:
       net1:
         ipv4_address: 10.10.0.21
-
-  mariadb:
-    image: mariadb:11.1.2
-    container_name: mariadb
-    restart: unless-stopped
-    environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root}
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./mysql:/var/lib/mysql
-    networks:
-      net1:
-        ipv4_address: 10.10.0.31
